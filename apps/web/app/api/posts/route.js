@@ -18,7 +18,8 @@ async function fetchPostsFromWordPress(wordpressUrl) {
       });
 
       if (response.ok) {
-        return await response.json();
+        const posts = await response.json();
+        return posts;
       }
     } catch {
       // Bỏ qua lỗi và thử endpoint tiếp theo
@@ -30,7 +31,9 @@ async function fetchPostsFromWordPress(wordpressUrl) {
 
 export async function GET() {
   const wordpressUrl =
-    process.env.NEXT_PUBLIC_WORDPRESS_URL || process.env.WORDPRESS_URL || 'http://localhost:8000';
+    process.env.NEXT_PUBLIC_WORDPRESS_URL || 
+    process.env.WORDPRESS_URL || 
+    'http://wordpress:80'; // Docker compose service name
 
   try {
     const posts = await fetchPostsFromWordPress(wordpressUrl);
@@ -38,25 +41,29 @@ export async function GET() {
     if (!posts) {
       return NextResponse.json(
         {
-          error:
-            'WordPress backend chưa sẵn sàng. Hãy hoàn tất cài đặt WordPress tại http://localhost:8000 trước khi mở trang này.',
+          error: 'WordPress backend không sẵn sàng. Vui lòng khởi động Docker containers.',
         },
         { status: 502 }
       );
     }
 
+    // Format posts để trả về frontend
     const formattedPosts = posts.map((post) => ({
       id: post.id,
       title: post.title?.rendered || 'Không có tiêu đề',
-      excerpt: (post.excerpt?.rendered || '').replace(/<[^>]*>/g, '').slice(0, 140) + '...',
+      excerpt: (post.excerpt?.rendered || '').replace(/<[^>]*>/g, '').trim().slice(0, 140) + '...',
+      content: post.content?.rendered || '',
       link: post.link,
+      date: post.date,
+      author: post._embedded?.author?.[0]?.name || 'Admin',
     }));
 
     return NextResponse.json(formattedPosts);
   } catch (error) {
+    console.error('Error fetching posts:', error);
     return NextResponse.json(
       {
-        error: 'Không thể kết nối tới WordPress backend.',
+        error: 'Không thể kết nối tới WordPress backend. Chi tiết lỗi: ' + error.message,
       },
       { status: 500 }
     );
