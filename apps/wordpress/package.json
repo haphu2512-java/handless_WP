@@ -1,0 +1,9 @@
+{
+  "name": "wordpress-local",
+  "private": true,
+  "scripts": {
+    "start": "docker compose -f ../../docker-compose.yml up -d",
+    "stop": "docker compose -f ../../docker-compose.yml down",
+    "reset": "docker compose -f ../../docker-compose.yml down -v"
+  }
+}

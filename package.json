@@ -1,0 +1,9 @@
+{
+  "name": "headless-wordpress-nextjs",
+  "private": true,
+  "scripts": {
+    "wp:start": "docker compose up -d",
+    "wp:stop": "docker compose down",
+    "wp:reset": "docker compose down -v"
+  }
+}
